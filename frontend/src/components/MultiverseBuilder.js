@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const API_URL = "http://127.0.0.1:8000/api/universes";
+const API_URL = "https://multiverse-narrative-backend.onrender.com/api/universes";
 
 function MultiverseBuilder() {
   const [universes, setUniverses] = useState([]);

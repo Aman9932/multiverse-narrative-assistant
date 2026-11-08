@@ -61,7 +61,7 @@ function PlotEditor({ onBack }) {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/api/plot/generate",
+        "https://multiverse-narrative-backend.onrender.com/api/plot/generate",
         {
           method: "POST",
           headers: {
