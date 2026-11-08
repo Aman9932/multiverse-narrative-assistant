@@ -3,6 +3,7 @@ import traceback
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
+from sqlalchemy import inspect, text
 
 from app.services.ai_service import (
     generate_ai_response,
@@ -30,6 +31,29 @@ app.include_router(auth_router)
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
+
+def migrate_existing_tables():
+    inspector = inspect(engine)
+
+    tables = ["characters", "timeline_events", "universes"]
+
+    for table in tables:
+        if table in inspector.get_table_names():
+            columns = [
+                column["name"]
+                for column in inspector.get_columns(table)
+            ]
+
+            if "user_id" not in columns:
+                with engine.begin() as connection:
+                    connection.execute(
+                        text(
+                            f"ALTER TABLE {table} "
+                            "ADD COLUMN user_id INTEGER REFERENCES users(id)"
+                        )
+                    )
+
+migrate_existing_tables()
 
 # Frontend connection
 app.add_middleware(
@@ -164,7 +188,10 @@ def generate_character(
 
 # AI Dialogue Generator
 @app.post("/api/dialogue/generate")
-def generate_dialogue(data: DialogueRequest):
+def generate_dialogue(
+    data: DialogueRequest,
+    current_user: User = Depends(get_current_user)
+):
 
     demo_dialogue = f"""
 ## Original Dialogue
@@ -210,7 +237,10 @@ the selected emotion: {data.emotion}.
 
 # AI Branching Plot Generator
 @app.post("/api/plot/generate")
-def generate_plot(data: PlotRequest):
+def generate_plot(
+    data: PlotRequest,
+    current_user: User = Depends(get_current_user)
+):
 
     demo_endings = f"""
 # Happy Ending
