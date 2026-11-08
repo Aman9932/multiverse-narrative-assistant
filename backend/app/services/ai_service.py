@@ -18,7 +18,7 @@ if not API_KEY:
 # Initialize Gemini
 client = genai.Client(api_key=API_KEY)
 
-MODEL_NAME = "gemini-flash-lite-latest"
+MODEL_NAME = "gemini-3.5-flash-lite"
 
 # Retry delays: 2, 4 and 8 seconds
 RETRY_DELAYS = [2, 4, 8]
