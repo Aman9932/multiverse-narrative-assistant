@@ -7,7 +7,7 @@ import UniverseBuilder from "./UniverseBuilder";
 import Workspace from "./Workspace";
 import CharacterLibrary from "./CharacterLibrary";
 
-function Dashboard() {
+function Dashboard({ user, token, onLogout }) {
   const [showEditor, setShowEditor] = useState(false);
   const [showDialogue, setShowDialogue] = useState(false);
   const [showPlotEditor, setShowPlotEditor] = useState(false);
@@ -17,23 +17,49 @@ function Dashboard() {
   const [showCharacterLibrary, setShowCharacterLibrary] = useState(false);
 
   if (showEditor)
-    return <Editor onBack={() => setShowEditor(false)} />;
+    return (
+      <Editor
+        token={token}
+        onBack={() => setShowEditor(false)}
+      />
+    );
 
   if (showDialogue)
-    return <DialogueEditor onBack={() => setShowDialogue(false)} />;
+    return (
+      <DialogueEditor
+        token={token}
+        onBack={() => setShowDialogue(false)}
+      />
+    );
 
   if (showPlotEditor)
-    return <PlotEditor onBack={() => setShowPlotEditor(false)} />;
+    return (
+      <PlotEditor
+        token={token}
+        onBack={() => setShowPlotEditor(false)}
+      />
+    );
 
   if (showTimeline)
-    return <TimelineManager onBack={() => setShowTimeline(false)} />;
+    return (
+      <TimelineManager
+        token={token}
+        onBack={() => setShowTimeline(false)}
+      />
+    );
 
   if (showUniverse)
-    return <UniverseBuilder onBack={() => setShowUniverse(false)} />;
+    return (
+      <UniverseBuilder
+        token={token}
+        onBack={() => setShowUniverse(false)}
+      />
+    );
 
   if (showWorkspace) {
     return (
         <Workspace
+        token={token}
         onBack={() => setShowWorkspace(false)}
         onOpenCharacter={() => setShowEditor(true)}
         onOpenDialogue={() => setShowDialogue(true)}
@@ -44,6 +70,7 @@ function Dashboard() {
     if (showCharacterLibrary) {
         return (
             <CharacterLibrary
+            token={token}
             onBack={() => setShowCharacterLibrary(false)}
             />
         );
@@ -399,13 +426,33 @@ function Dashboard() {
           <span>Multiverse Assistant</span>
         </div>
 
-        <button
-        className="workspace-badge"
-        onClick={() => setShowWorkspace(true)}
-        style={{ cursor: "pointer" }}
-        >
-        ✦ AI WORKSPACE →
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
+          <span style={{ color: "#c4b5fd", fontSize: "13px" }}>
+            👤 {user?.email}
+          </span>
+
+          <button
+            className="workspace-badge"
+            onClick={() => setShowWorkspace(true)}
+            style={{ cursor: "pointer" }}
+          >
+            ✦ AI WORKSPACE →
+          </button>
+
+          <button
+            onClick={onLogout}
+            style={{
+              background: "#7f1d1d",
+              color: "white",
+              border: "1px solid #ef4444",
+              borderRadius: "30px",
+              padding: "11px 18px",
+              cursor: "pointer"
+            }}
+          >
+            Logout
+          </button>
+        </div>
       </header>
 
       <section className="hero">

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 
-const API_URL = "https://multiverse-narrative-backend.onrender.com/api/timeline/events";
+const API_URL = `${process.env.REACT_APP_API_URL || "http://127.0.0.1:8000"}/api/timeline/events`;
 
-function TimelineManager({ onBack }) {
+function TimelineManager({ token, onBack }) {
   const mobileStyles = `
     @media (max-width: 600px) {
       .timeline-manager {
@@ -70,7 +70,11 @@ function TimelineManager({ onBack }) {
     setError("");
 
     try {
-      const response = await fetch(API_URL);
+      const response = await fetch(API_URL, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -87,7 +91,7 @@ function TimelineManager({ onBack }) {
 
   useEffect(() => {
     loadEvents();
-  }, []);
+  }, [token]);
 
   // Handle form inputs
   const handleChange = (e) => {
@@ -115,7 +119,8 @@ function TimelineManager({ onBack }) {
       const response = await fetch(url, {
         method,
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify(form)
       });
@@ -176,7 +181,10 @@ function TimelineManager({ onBack }) {
 
     try {
       const response = await fetch(`${API_URL}/${id}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
       });
 
       const data = await response.json();

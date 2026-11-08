@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useState } from "react";
 
-const API_URL = "https://multiverse-narrative-backend.onrender.com/api";
+const API_URL = `${process.env.REACT_APP_API_URL || "http://127.0.0.1:8000"}/api`;
 
 function Workspace({
+  token,
   onBack,
   onOpenCharacter,
   onOpenDialogue,
@@ -18,10 +19,14 @@ function Workspace({
     setError("");
 
     try {
-      const [universeResponse, eventResponse] = await Promise.all([
-        fetch(`${API_URL}/universes`),
-        fetch(`${API_URL}/timeline/events`)
-      ]);
+      const headers = {
+  "Authorization": `Bearer ${token}`
+};
+
+const [universeResponse, eventResponse] = await Promise.all([
+  fetch(`${API_URL}/universes`, { headers }),
+  fetch(`${API_URL}/timeline/events`, { headers })
+]);
 
       if (!universeResponse.ok || !eventResponse.ok) {
         throw new Error("Unable to load workspace data.");
@@ -38,7 +43,7 @@ function Workspace({
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     loadWorkspace();

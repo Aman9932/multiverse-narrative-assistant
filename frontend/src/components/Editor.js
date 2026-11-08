@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { jsPDF } from "jspdf";
 
-function Editor({ onBack }) {
+function Editor({ token, onBack }) {
   const [form, setForm] = useState({
     name: "",
     age: 25,
@@ -35,11 +35,12 @@ function Editor({ onBack }) {
 
     try {
       const response = await fetch(
-        "https://multiverse-narrative-backend.onrender.com/api/character/generate",
+        `${process.env.REACT_APP_API_URL || "http://127.0.0.1:8000"}/api/character/generate`,
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify({
             ...form,

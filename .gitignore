@@ -23,3 +23,11 @@ dist/
 # System files
 .DS_Store
 Thumbs.db
+
+*.sqlite
+*.sqlite3
+
+backend/migrate_user_data.py
+backend/story_backup_before_auth.db
+
+backend/test_gemini.py

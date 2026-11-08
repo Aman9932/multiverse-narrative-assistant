@@ -15,12 +15,18 @@ from sqlalchemy.orm import Session
 from app import timeline_models
 from app import multiverse_models
 from app import character_models
+from app import user_models
+from app.auth_routes import router as auth_router
+from app.auth import get_current_user
+from app.user_models import User
 
 app = FastAPI(
     title="Multiverse Narrative Assistant",
     description="AI-powered storytelling platform",
     version="1.0.0"
 )
+
+app.include_router(auth_router)
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -88,7 +94,8 @@ def health():
 @app.post("/api/character/generate")
 def generate_character(
     data: CharacterRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     prompt = CHARACTER_PROMPT.format(
         name=data.name,
@@ -123,6 +130,7 @@ def generate_character(
 
         # Save character to database
         character = character_models.Character(
+            user_id=current_user.id,
             name=data.name,
             age=data.age,
             personality=data.personality,
@@ -250,11 +258,13 @@ The real enemy was hiding in plain sight.
 @app.post("/api/timeline/events")
 def add_timeline_event(
     data: TimelineEventCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
 
     try:
         event = timeline_models.TimelineEvent(
+            user_id=current_user.id,
             title=data.title,
             description=data.description,
             event_time=data.event_time,
@@ -283,11 +293,16 @@ def add_timeline_event(
 
 # Get All Timeline Events
 @app.get("/api/timeline/events")
-def get_timeline_events(db: Session = Depends(get_db)):
+def get_timeline_events(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
 
     try:
         events = db.query(
             timeline_models.TimelineEvent
+        ).filter(
+            timeline_models.TimelineEvent.user_id == current_user.id
         ).order_by(
             timeline_models.TimelineEvent.id
         ).all()
@@ -320,12 +335,14 @@ def get_timeline_events(db: Session = Depends(get_db)):
 def update_timeline_event(
     event_id: int,
     data: TimelineEventCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     event = db.query(
         timeline_models.TimelineEvent
     ).filter(
-        timeline_models.TimelineEvent.id == event_id
+        timeline_models.TimelineEvent.id == event_id,
+        timeline_models.TimelineEvent.user_id == current_user.id
     ).first()
 
     if not event:
@@ -355,13 +372,15 @@ def update_timeline_event(
 @app.delete("/api/timeline/events/{event_id}")
 def delete_timeline_event(
     event_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     try:
         event = db.query(
             timeline_models.TimelineEvent
         ).filter(
-            timeline_models.TimelineEvent.id == event_id
+            timeline_models.TimelineEvent.id == event_id,
+            timeline_models.TimelineEvent.user_id == current_user.id
         ).first()
 
         if not event:
@@ -397,13 +416,15 @@ def delete_timeline_event(
 @app.post("/api/universes")
 def create_universe(
     data: UniverseCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     try:
         existing = db.query(
             multiverse_models.Universe
         ).filter(
-            multiverse_models.Universe.name == data.name
+            multiverse_models.Universe.name == data.name,
+            multiverse_models.Universe.user_id == current_user.id
         ).first()
 
         if existing:
@@ -413,6 +434,7 @@ def create_universe(
             )
 
         universe = multiverse_models.Universe(
+            user_id=current_user.id,
             name=data.name,
             description=data.description,
             genre=data.genre,
@@ -444,9 +466,14 @@ def create_universe(
 
 # 2. Get All Universes
 @app.get("/api/universes")
-def get_universes(db: Session = Depends(get_db)):
+def get_universes(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     universes = db.query(
         multiverse_models.Universe
+    ).filter(
+        multiverse_models.Universe.user_id == current_user.id
     ).order_by(
         multiverse_models.Universe.id
     ).all()
@@ -472,12 +499,14 @@ def get_universes(db: Session = Depends(get_db)):
 def update_universe(
     universe_id: int,
     data: UniverseCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     universe = db.query(
         multiverse_models.Universe
     ).filter(
-        multiverse_models.Universe.id == universe_id
+        multiverse_models.Universe.id == universe_id,
+        multiverse_models.Universe.user_id == current_user.id
     ).first()
 
     if not universe:
@@ -490,6 +519,7 @@ def update_universe(
         multiverse_models.Universe
     ).filter(
         multiverse_models.Universe.name == data.name,
+        multiverse_models.Universe.user_id == current_user.id,
         multiverse_models.Universe.id != universe_id
     ).first()
 
@@ -518,12 +548,14 @@ def update_universe(
 @app.delete("/api/universes/{universe_id}")
 def delete_universe(
     universe_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     universe = db.query(
         multiverse_models.Universe
     ).filter(
-        multiverse_models.Universe.id == universe_id
+        multiverse_models.Universe.id == universe_id,
+        multiverse_models.Universe.user_id == current_user.id
     ).first()
 
     if not universe:
@@ -548,10 +580,14 @@ def delete_universe(
 
 # 1. Get All Characters
 @app.get("/api/characters")
-def get_all_characters(db: Session = Depends(get_db)):
-
+def get_all_characters(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     characters = db.query(
         character_models.Character
+    ).filter(
+        character_models.Character.user_id == current_user.id
     ).order_by(
         character_models.Character.id.desc()
     ).all()
@@ -579,13 +615,15 @@ def get_all_characters(db: Session = Depends(get_db)):
 @app.get("/api/characters/{character_id}")
 def get_character(
     character_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
 
     character = db.query(
         character_models.Character
     ).filter(
-        character_models.Character.id == character_id
+        character_models.Character.id == character_id,
+        character_models.Character.user_id == current_user.id
     ).first()
 
     if not character:
@@ -614,13 +652,15 @@ def get_character(
 def update_character(
     character_id: int,
     data: CharacterRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
 
     character = db.query(
         character_models.Character
     ).filter(
-        character_models.Character.id == character_id
+        character_models.Character.id == character_id,
+        character_models.Character.user_id == current_user.id
     ).first()
 
     if not character:
@@ -650,13 +690,15 @@ def update_character(
 @app.delete("/api/characters/{character_id}")
 def delete_character(
     character_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
     try:
         character = db.query(
             character_models.Character
         ).filter(
-            character_models.Character.id == character_id
+            character_models.Character.id == character_id,
+            character_models.Character.user_id == current_user.id
         ).first()
 
         if not character:

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 
-function DialogueEditor({ onBack }) {
+function DialogueEditor({ token, onBack }) {
   const [dialogue, setDialogue] = useState("");
   const [emotion, setEmotion] = useState("Angry");
   const [result, setResult] = useState("");
@@ -21,11 +21,12 @@ function DialogueEditor({ onBack }) {
 
     try {
       const response = await fetch(
-        "https://multiverse-narrative-backend.onrender.com/api/dialogue/generate",
+        `${process.env.REACT_APP_API_URL || "http://127.0.0.1:8000"}/api/dialogue/generate`,
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify({
             dialogue,

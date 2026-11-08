@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 
-const API_URL = "https://multiverse-narrative-backend.onrender.com/api/universes";
+const API_URL = `${process.env.REACT_APP_API_URL || "http://127.0.0.1:8000"}/api/universes`;
 
-function UniverseBuilder({ onBack }) {
+function UniverseBuilder({ token, onBack }) {
   const mobileStyles = `
     @media (max-width: 600px) {
       .universe-builder {
@@ -81,7 +81,11 @@ function UniverseBuilder({ onBack }) {
     setError("");
 
     try {
-      const response = await fetch(API_URL);
+      const response = await fetch(API_URL, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -98,7 +102,7 @@ function UniverseBuilder({ onBack }) {
 
   useEffect(() => {
     loadUniverses();
-  }, []);
+  }, [token]);
 
   const handleChange = (e) => {
     setForm({
@@ -123,7 +127,8 @@ function UniverseBuilder({ onBack }) {
         {
           method: isEditing ? "PUT" : "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify(form)
         }
@@ -184,7 +189,10 @@ function UniverseBuilder({ onBack }) {
 
     try {
       const response = await fetch(`${API_URL}/${id}`, {
-        method: "DELETE"
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
       });
 
       const data = await response.json();

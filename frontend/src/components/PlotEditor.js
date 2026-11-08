@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ReactMarkdown from "react-markdown";
 
-function PlotEditor({ onBack }) {
+function PlotEditor({ token, onBack }) {
   const mobileStyles = `
     @media (max-width: 600px) {
       .plot-editor {
@@ -61,11 +61,12 @@ function PlotEditor({ onBack }) {
 
     try {
       const response = await fetch(
-        "https://multiverse-narrative-backend.onrender.com/api/plot/generate",
+        `${process.env.REACT_APP_API_URL || "http://127.0.0.1:8000"}/api/plot/generate`,
         {
           method: "POST",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
           },
           body: JSON.stringify({ story })
         }

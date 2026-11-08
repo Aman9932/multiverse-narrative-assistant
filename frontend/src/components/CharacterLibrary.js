@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 
-const API_URL = "https://multiverse-narrative-backend.onrender.com/api/characters";
+const API_URL = `${process.env.REACT_APP_API_URL || "http://127.0.0.1:8000"}/api/characters`;
 
-function CharacterLibrary({ onBack }) {
+function CharacterLibrary({ token, onBack }) {
   const mobileStyles = `
     @media (max-width: 600px) {
       .character-library {
@@ -87,7 +87,11 @@ function CharacterLibrary({ onBack }) {
     setError("");
 
     try {
-      const response = await fetch(API_URL);
+      const response = await fetch(API_URL, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
       const data = await response.json();
 
       if (!response.ok) {
@@ -129,7 +133,8 @@ function CharacterLibrary({ onBack }) {
       const response = await fetch(`${API_URL}/${editingId}`, {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify({
           ...editForm,
@@ -162,7 +167,10 @@ function CharacterLibrary({ onBack }) {
 
     try {
         const response = await fetch(`${API_URL}/${id}`, {
-        method: "DELETE"
+          method: "DELETE",
+          headers: {
+            "Authorization": `Bearer ${token}`
+          }
         });
 
         const data = await response.json();
@@ -183,7 +191,7 @@ function CharacterLibrary({ onBack }) {
 
   useEffect(() => {
     loadCharacters();
-  }, []);
+  }, [token]);
 
   const universes = [
   "All",
